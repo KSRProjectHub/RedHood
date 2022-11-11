@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ScrollView,
   FlatList,
+  ToastAndroid,
 } from 'react-native';
 import {
   responsiveHeight,
@@ -15,14 +16,14 @@ import {
   responsiveFontSize
 } from "react-native-responsive-dimensions";
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDocs } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
 
 export default function VegScreen() {
   const [getData, setGetData] = useState('');
   const navigation = useNavigation();
-  const DatCollectinRef = collection(db, "events"); //firebase databse reference
+  const DatCollectinRef = collection(db, "fooditems"); //firebase databse reference
   const [ignored, forceUpdate] = React.useReducer((x) => x + 1, 0);
 
   useEffect(() => {
@@ -34,6 +35,18 @@ export default function VegScreen() {
     };
     getAllData();
   }, [ignored]);
+
+  //delete vegetable from datasase
+  const deleteVeg = async (id) => {
+    try {
+      const UserDoc = doc(db, "fooditems", id);
+      await deleteDoc(UserDoc);
+    } catch (e) {
+      console.error("Error adding document: ", e);
+    }
+    ToastAndroid.show("successfully Deleted!", ToastAndroid.SHORT);
+    forceUpdate();
+  };
 
   return (
     <View style={styles.container}>
@@ -48,31 +61,50 @@ export default function VegScreen() {
           <ScrollView>
           <FlatList
             data={getData}
-            renderItem={({ item, index }) =>(
+            renderItem={({ item }) =>(
               <View>
-              {item.category=="1" &&
-            <TouchableOpacity activeOpacity={0.8}>
-              <Card containerStyle={{flexDirection:'column',borderRadius:20,flex:3, margin:10, maxWidth:"100%", width:360}}>
-                {/*react-native-elements Card*/}
-                <View style={{flexDirection:'row', justifyContent:'space-around'}}>
-                  {/* <Image source={require('../../assets/Food-Categories/Vegetables/beetroot.png')} style={styles.image}/> */}
-                  <View>
-                    <Text style={{fontSize:20, margin:5,  alignSelf:'center'}}>
-                      {item.foodname} {'\n'} <Text style={{fontSize:16, margin:5}}>Rs. {item.newPrice} /1KG {'\n'} {item.discount}%{'\t'} 
-                      <Text style={{color:'#818181'}}> Rs. {item.price}</Text></Text>
-                    </Text> 
-                  </View>
-                </View>
-              </Card>
-            </TouchableOpacity>  
-            }</View>
+              {item.category==="1" &&
+                <TouchableOpacity activeOpacity={0.8}>
+                  <Card containerStyle={{flexDirection:'column',borderRadius:20,flex:3, margin:10, maxWidth:"100%", width:360}}>
+                    {/*react-native-elements Card*/}
+                    <View style={{flexDirection:'row', justifyContent:'space-around'}}>
+                      <Image source={require('../../assets/Food-Categories/Vegetables/beetroot.png')} style={styles.image}/>
+                      <View style={{alignSelf:'center', marginLeft:5}}>
+                        <Text style={{fontSize:20, margin:5,  alignSelf:'center'}}>
+                        {item.foodname} {'\n'} <Text style={{fontSize:16, margin:5}}>Rs. {item.newPrice}.00 /1KG {'\n'} {item.discount}%{'\t'} 
+                            <Text style={{color:'#818181'}}>  <Text style={{textDecorationLine:'line-through'}}>Rs.{item.price}.00</Text></Text></Text>
+                        </Text> 
+                      </View>
+                      <View style={{justifyContent:'flex-end', marginTop:5,  alignSelf:'center'}}>
+                        <TouchableOpacity style={{backgroundColor: 'black',borderRadius:5, margin: 5, padding: 10, justifyContent:'center', width:100}}>
+                          <Text style={{color:'white', width:'auto', textAlign:'center', fontSize:16}}>Update</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => deleteVeg(item.id)} style={{backgroundColor: 'black',borderRadius:5, margin: 5, padding: 10, justifyContent:'center', width:100}}>
+                          <Text style={{color:'white', width:'auto', textAlign:'center', fontSize:16}}>Delete</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </Card>
+                </TouchableOpacity>   
+              }
+            </View>
             )}
           ></FlatList>
-
-          <TouchableOpacity style={{backgroundColor: 'black',borderRadius:5, margin: 10, padding: 10, justifyContent:'center'}} onPress={()=> navigation.navigate("ViewFood")}>
-                <Text style={{color:'white', width:"auto", textAlign:'center', fontSize:16}}>View Food Details</Text>
-            </TouchableOpacity>                  
+{/*
+          <TouchableOpacity style={{backgroundColor: 'black',borderRadius:5, margin: 10, padding: 10, justifyContent:'center'}}>
+            <Text style={{color:'white', width:"auto", textAlign:'center', fontSize:16}}>View Food Details</Text>
+          </TouchableOpacity> */}
         </ScrollView>
+      </View>
+      <View  style={styles.footer}>
+
+        <TouchableOpacity style={{backgroundColor: 'white',borderRadius:5, margin: 10, padding: 10}} onPress={()=> navigation.navigate("Home")} >
+          <Image source={require('../../assets/home.png')}/>
+            {/* <Image style={{color:'black', width:'auto', textAlign:'center', fontSize:16} /> */}
+        </TouchableOpacity>
+        <TouchableOpacity style={{backgroundColor: 'white',borderRadius:5, margin: 10, padding: 10}}>
+          <Image source={require('../../assets/iconNoName.png')}/>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -93,6 +125,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     
   },
+  footer: {height: 120,flexDirection:'row',justifyContent:'space-around',marginBottom:10},
+
   textWrpTxt: {
     fontSize: 24,
     color: 'black',

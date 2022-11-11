@@ -20,7 +20,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 import { FlatList } from 'react-native-gesture-handler';
 
-export default function CategoriesScreen({route}) {
+export default function CategoriesScreen({navigation}) {
 
 
   return (
